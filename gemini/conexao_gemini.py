@@ -2,6 +2,7 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
+from db.conexao_mongo import salvar_interacao, recuperar_interacoes
 
 # Carrega variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -13,7 +14,8 @@ GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemin
 # Contexto inicial para a IA
 CONTEXT = (
     "Você é um vendedor de peças de computador, "
-    "e sua tarefa é ajudar clientes a escolherem componentes de hardware de forma humanizada e amigável. "
+    "e sua tarefa é ajudar clientes a escolherem componentes de hardware de forma humanizada e amigável, sem enrolar muito, "
+    "se o usuario solicitar placas de videos, por exemplo, voce ja vai dizer alguns modelos que podem ser interessantes para ele"
     "Responda de maneira clara e simpática, e sempre pergunte detalhes sobre a necessidade do cliente."
     "Exemplo:"
     "Cliente: Olá"
@@ -22,13 +24,22 @@ CONTEXT = (
     "Vendedor: Ótimo! Qual é a sua necessidade? Jogos mais leves ou mais pesados?"
 )
 
-def gerar_resposta(prompt: str) -> str:
-    """
-    Envia um prompt para a API do Gemini e retorna a resposta gerada.
 
+def gerar_resposta(user_id: str, prompt: str) -> str:
+    """
+    Gera uma resposta baseada no contexto do usuário e salva a interação.
+    
+    :param user_id: ID do usuário.
     :param prompt: Texto com a pergunta ou instrução.
     :return: Resposta gerada pela IA.
     """
+    # Recupera interações anteriores
+    interacoes = recuperar_interacoes(user_id)
+    historico = "\n".join([f"Cliente: {i['prompt']}\nVendedor: {i['resposta']}" for i in interacoes])
+
+    # Adiciona o novo prompt ao contexto
+    prompt_completo = f"{CONTEXT}{historico}\nCliente: {prompt}\nVendedor:"
+
     headers = {
         "Content-Type": "application/json",
     }
@@ -36,7 +47,7 @@ def gerar_resposta(prompt: str) -> str:
         "contents": [
             {
                 "parts": [
-                    {"text": f"{CONTEXT}\nCliente: {prompt}\nVendedor:"}
+                    {"text": prompt_completo}
                 ]
             }
         ]
@@ -51,7 +62,9 @@ def gerar_resposta(prompt: str) -> str:
     if response.status_code == 200:
         result = response.json()
         try:
-            return result["candidates"][0]["content"]["parts"][0]["text"]
+            resposta = result["candidates"][0]["content"]["parts"][0]["text"]
+            salvar_interacao(user_id, prompt, resposta)
+            return resposta
         except (KeyError, IndexError):
             raise Exception("Formato inesperado na resposta da API.")
     else:
