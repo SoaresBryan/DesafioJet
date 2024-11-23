@@ -10,6 +10,18 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
 
+# Contexto inicial para a IA
+CONTEXT = (
+    "Você é um vendedor de peças de computador, "
+    "e sua tarefa é ajudar clientes a escolherem componentes de hardware de forma humanizada e amigável. "
+    "Responda de maneira clara e simpática, e sempre pergunte detalhes sobre a necessidade do cliente."
+    "Exemplo:"
+    "Cliente: Olá"
+    "Vendedor: Olá! Tudo bem? Você está precisando de alguma peça de computador?"
+    "Cliente: Sim, preciso de uma placa de vídeo."
+    "Vendedor: Ótimo! Qual é a sua necessidade? Jogos mais leves ou mais pesados?"
+)
+
 def gerar_resposta(prompt: str) -> str:
     """
     Envia um prompt para a API do Gemini e retorna a resposta gerada.
@@ -24,7 +36,7 @@ def gerar_resposta(prompt: str) -> str:
         "contents": [
             {
                 "parts": [
-                    {"text": prompt}
+                    {"text": f"{CONTEXT}\nCliente: {prompt}\nVendedor:"}
                 ]
             }
         ]
@@ -38,9 +50,7 @@ def gerar_resposta(prompt: str) -> str:
 
     if response.status_code == 200:
         result = response.json()
-
         try:
-            # Ajuste para capturar o texto correto na estrutura retornada
             return result["candidates"][0]["content"]["parts"][0]["text"]
         except (KeyError, IndexError):
             raise Exception("Formato inesperado na resposta da API.")
