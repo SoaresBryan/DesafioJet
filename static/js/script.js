@@ -8,16 +8,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendButton = document.getElementById('send-button');
     const chatWindow = document.getElementById('chat-window');
 
-    let userId = null;
+    let userId = null; // Variável global para armazenar o ID do usuário
 
     // Login do usuário
     loginButton.addEventListener('click', function () {
-        console.log('Botão Entrar clicado');
-
         const inputId = userIdInput.value.trim();
         if (inputId) {
             console.log(`ID do usuário inserido: ${inputId}`);
-            userId = inputId;
+            userId = inputId; // Armazena o ID do usuário
 
             // Esconde a tela de login e mostra a tela de chat
             loginScreen.style.display = 'none'; // Esconde a tela de login
@@ -29,8 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Logout do usuário
     logoutButton.addEventListener('click', function () {
-        console.log('Botão Sair clicado');
-
         userId = null; // Reseta o ID do usuário
         userIdInput.value = ''; // Limpa o campo de entrada
         chatWindow.innerHTML = ''; // Limpa o histórico de mensagens
@@ -56,25 +52,30 @@ document.addEventListener('DOMContentLoaded', function () {
             appendMessage('user', message); // Adiciona a mensagem do usuário na tela
             messageInput.value = ''; // Limpa o campo de entrada
 
+            if (!userId) {
+                console.error('Erro: ID do usuário não encontrado.');
+                appendMessage('bot', 'Erro: ID do usuário não definido. Por favor, faça login novamente.');
+                return;
+            }
+
             // Envia a mensagem para o backend
-            fetch('/api/chat', {
+            fetch(`/api/chat?mensagem=${encodeURIComponent(message)}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'user_id': userId
-                },
-                body: JSON.stringify({ 'prompt': message })
+                    'user-id': userId // Cabeçalho com o ID do usuário
+                }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.resposta) {
-                        appendMessage('bot', data.resposta); // Adiciona a resposta do bot na tela
-                    } else {
-                        appendMessage('bot', 'Erro: Sem resposta do servidor.');
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status}`);
                     }
+                    return response.text(); // Lê a resposta como texto simples
+                })
+                .then(data => {
+                    appendMessage('bot', data); // Adiciona a resposta do bot na tela
                 })
                 .catch(error => {
-                    console.error('Erro:', error);
+                    console.error('Erro ao enviar mensagem:', error);
                     appendMessage('bot', 'Erro ao enviar mensagem.');
                 });
         }
