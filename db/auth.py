@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException, Header
+from fastapi import HTTPException, Header
+
 
 async def get_user_id(x_user_id: str = Header(...)):
     if not x_user_id:

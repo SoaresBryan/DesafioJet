@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Web App</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+    <div id="login-screen">
+        <div class="login-container">
+            <h1>Chat Bot Jet Sales</h1>
+            <p>Insira seu ID de usuário para começar:</p>
+            <input type="text" id="user-id-input" placeholder="ID do Usuário">
+            <button id="login-button">Entrar</button>
+        </div>
+    </div>
+
+    <div id="chat-screen" class="hidden">
+        <div class="chat-header">
+            <h2>ChatBot da Jet</h2>
+            <button id="logout-button">Sair</button>
+        </div>
+        <div id="chat-window" class="chat-window"></div>
+        <div class="message-input-container">
+            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <button id="send-button">Enviar</button>
+        </div>
+    </div>
+
+    <script src="static/js/script.js"></script>
+</body>
+</html>

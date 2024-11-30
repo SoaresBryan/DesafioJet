@@ -1,17 +1,20 @@
+# routers/chat.py
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from gemini.conexao_gemini import gerar_resposta
 
 router = APIRouter()
 
+
 class Mensagem(BaseModel):
     prompt: str
+
 
 @router.post("/chat")
 async def chat(mensagem: Mensagem, user_id: str = Header(...)):
     """
     Endpoint para interação com o chatbot.
-    
+
     :param mensagem: Objeto contendo o prompt enviado pelo usuário.
     :param user_id: ID do usuário passado no cabeçalho.
     :return: Resposta gerada pela IA.
